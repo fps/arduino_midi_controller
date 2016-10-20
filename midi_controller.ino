@@ -62,5 +62,6 @@ void loop() {
     lastButtonState[button] = state;
   }
   
+  // Delay a couple of millisecs to avoid rapid firing while closing/opening a switch
   delay(10);
 }
