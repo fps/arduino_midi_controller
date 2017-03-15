@@ -1,35 +1,61 @@
+#include <DueTimer.h>
+
+#if 0
 #include <midi_Message.h>
 #include <MIDI.h>
 #include <midi_Namespace.h>
 #include <midi_Defs.h>
 #include <midi_Settings.h>
+#endif
 
+#include<Arduino.h>
+#include <ControlChain.h>
 
-// The first pin of consecutive pins to attach our switches to
+ControlChain control_chain;
+
 const int buttonPinBase = 3;
 const int numberOfButtons = 5;
 
-// An array of ints to remember the button states from the last loop
-// so we can detect state transitions
 int lastButtonState[numberOfButtons] = { LOW, LOW, LOW, LOW, LOW };
 
-// An array of ints to remember the last CC we sent, so we can send 
-// the corresponding different one on the next press
-int lastMidiState[numberOfButtons] = { 0, 0, 0, 0, 0 };
+float controlState[numberOfButtons] = { 0, 0, 0, 0, 0 };
+cc_actuator_config_t cc_actuator_configs[numberOfButtons];
 
+
+#if 0
 MIDI_CREATE_DEFAULT_INSTANCE();
+#endif
 
 void setup() 
 {
+  #if 0
   MIDI.begin(1);
 
   Serial.begin(38400);
+  #endif
+  
+  control_chain.init();
+  
+  const char *uri = "https://nu.fps.io/mod_button_box_hack";
+  cc_device_t *device = control_chain.newDevice("ModButtonBoxHack", uri);
   
   // We use INPUT_PULLUP to use the included pullup resistors 
   // in the microcontroller
   for (int button = 0; button < numberOfButtons; ++button)
   {
     pinMode(buttonPinBase + button, INPUT_PULLUP);
+    
+    cc_actuator_configs[button].type = CC_ACTUATOR_MOMENTARY;
+    cc_actuator_configs[button].name = "Button";
+    cc_actuator_configs[button].value = &controlState[button];
+    cc_actuator_configs[button].min = 0.0;
+    cc_actuator_configs[button].max = 1.0;
+    cc_actuator_configs[button].supported_modes = CC_MODE_TOGGLE | CC_MODE_TRIGGER;
+    cc_actuator_configs[button].max_assignments = 1;
+    
+    cc_actuator_t *actuator;
+    actuator = control_chain.newActuator(&cc_actuator_configs[button]);
+    control_chain.addActuator(device, actuator);
   }
 }
 
@@ -44,18 +70,12 @@ void loop() {
       // Going from low to high (on push)
       if (state == HIGH) 
       {
-        // Check the last CC value we sent so we can send the right one now
-        if (lastMidiState[button] == 0)
-        {
-          MIDI.sendControlChange(button + 1, 127, 1);
-          lastMidiState[button] = 1;
-        }
-        else
-        {
-          MIDI.sendControlChange(button + 1, 0, 1);
-          lastMidiState[button] = 0;
-        }
+        controlState[button] = 1;
       } 
+      else
+      {
+        controlState[button] = 0;
+      }
     }
     
     // Store away the current state for the transition detection
