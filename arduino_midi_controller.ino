@@ -37,7 +37,7 @@ void loop() {
         // Check the last CC value we sent so we can send the right one now
         if (lastMidiState[button] == 0)
         {
-          midiEventPacket_t packet = {0x0B, (uint8_t)(0xB0 | button), 127, 0};
+          midiEventPacket_t packet = {0x0B, (uint8_t)(0xB0 | button), 0, 127};
           MidiUSB.sendMIDI(packet);
         }
         else
