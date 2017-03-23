@@ -1,11 +1,9 @@
-#include <pitchToNote.h>
 #include <MIDIUSB.h>
-#include <frequencyToNote.h>
 
 
 // The first pin of consecutive pins to attach our switches to
 const int buttonPinBase = 3;
-const int numberOfButtons = 5;
+const uint8_t numberOfButtons = 5;
 
 // An array of ints to remember the button states from the last loop
 // so we can detect state transitions
@@ -39,12 +37,12 @@ void loop() {
         // Check the last CC value we sent so we can send the right one now
         if (lastMidiState[button] == 0)
         {
-          midiEventPacket_t packet = {0x0B, 0xB0 | button, 127, 0};
+          midiEventPacket_t packet = {0x0B, (uint8_t)(0xB0 | button), 127, 0};
           MidiUSB.sendMIDI(packet);
         }
         else
         {
-          midiEventPacket_t packet = {0x0B, 0xB0 | button, 0, 0};
+          midiEventPacket_t packet = {0x0B, (uint8_t)(0xB0 | button), 0, 0};
           MidiUSB.sendMIDI(packet);
         }
         MidiUSB.flush();
