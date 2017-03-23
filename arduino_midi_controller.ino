@@ -1,8 +1,6 @@
-#include <midi_Message.h>
-#include <MIDI.h>
-#include <midi_Namespace.h>
-#include <midi_Defs.h>
-#include <midi_Settings.h>
+#include <pitchToNote.h>
+#include <MIDIUSB.h>
+#include <frequencyToNote.h>
 
 
 // The first pin of consecutive pins to attach our switches to
@@ -17,14 +15,8 @@ int lastButtonState[numberOfButtons] = { LOW, LOW, LOW, LOW, LOW };
 // the corresponding different one on the next press
 int lastMidiState[numberOfButtons] = { 0, 0, 0, 0, 0 };
 
-MIDI_CREATE_DEFAULT_INSTANCE();
-
 void setup() 
 {
-  MIDI.begin(1);
-
-  Serial.begin(38400);
-  
   // We use INPUT_PULLUP to use the included pullup resistors 
   // in the microcontroller
   for (int button = 0; button < numberOfButtons; ++button)
@@ -47,14 +39,15 @@ void loop() {
         // Check the last CC value we sent so we can send the right one now
         if (lastMidiState[button] == 0)
         {
-          MIDI.sendControlChange(button + 1, 127, 1);
-          lastMidiState[button] = 1;
+          midiEventPacket_t packet = {0x0B, 0xB0 | button, 127, 0};
+          MidiUSB.sendMIDI(packet);
         }
         else
         {
-          MIDI.sendControlChange(button + 1, 0, 1);
-          lastMidiState[button] = 0;
+          midiEventPacket_t packet = {0x0B, 0xB0 | button, 0, 0};
+          MidiUSB.sendMIDI(packet);
         }
+        MidiUSB.flush();
       } 
     }
     
