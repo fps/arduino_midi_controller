@@ -39,11 +39,13 @@ void loop() {
         {
           midiEventPacket_t packet = {0x0B, (uint8_t)(0xB0 | button), 0, 127};
           MidiUSB.sendMIDI(packet);
+          lastMidiState[button] = 127;
         }
         else
         {
           midiEventPacket_t packet = {0x0B, (uint8_t)(0xB0 | button), 0, 0};
           MidiUSB.sendMIDI(packet);
+          lastMidiState[button] = 0;
         }
         MidiUSB.flush();
       } 
